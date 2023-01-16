@@ -184,6 +184,7 @@ class MainWindow(QMainWindow):
         self.labels[1].setText(f'{name} wins: {stats[0]}')
         self.labels[2].setText(f'Computer wins: {stats[1]}')
         self.labels[3].setText(f'Draws: {stats[2]}')
+        self.labels[4].setText(f"You played {game_count} games. New game ?")
 
     def newgame(self, pl):
         global game_count
