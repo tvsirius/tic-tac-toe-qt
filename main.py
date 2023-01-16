@@ -13,6 +13,8 @@ from PyQt6.QtWidgets import (QApplication,
                              QWidget, )
 
 stats = [0, 0, 0]
+game_count = 0
+name = ''
 
 from board import Board
 
@@ -25,43 +27,57 @@ class PlayWindow(QMainWindow):
         self.board = Board()
         self.ismove = False
 
-        layouts = [QVBoxLayout(), QVBoxLayout(), QVBoxLayout()]
+        layouts = [QHBoxLayout(), QHBoxLayout(), QHBoxLayout()]
 
-        buttons = [[QPushButton(), QPushButton(), QPushButton()],
-                   [QPushButton(), QPushButton(), QPushButton()],
-                   [QPushButton(), QPushButton(), QPushButton()]]
+        self.buttons = [[QPushButton(), QPushButton(), QPushButton()],
+                        [QPushButton(), QPushButton(), QPushButton()],
+                        [QPushButton(), QPushButton(), QPushButton()]]
 
-        fin_layout =QHBoxLayout()
+        fin_layout = QVBoxLayout()
 
         for x in range(3):
             for y in range(3):
-                layouts[x].addWidget(buttons[x][y])
-                buttons[x][y].setFixedSize(QSize(50,50))
+                layouts[x].addWidget(self.buttons[x][y])
+                self.buttons[x][y].setFixedSize(QSize(50, 50))
 
+        widgets = []
+        self.label0 = QLabel(f"Game Tic Tac Toe, {game_count} play")
+        self.label1 = QLabel(f"---")
+        fin_layout.addWidget(self.label0)
 
-        widgets=[]
         for i in range(3):
             widgets.append(QWidget())
             widgets[i].setLayout(layouts[i])
             fin_layout.addWidget(widgets[i])
 
-        # for x in range(2):
-        #     for y in range(2):
-        #         buttons[x][y].clicked.connect()
+        fin_layout.addWidget(self.label1)
+
+        for x in range(3):
+            for y in range(3):
+                self.buttons[x][y].clicked.connect(self.field_clicked_wrap(y, x))
 
         widget = QWidget()
         widget.setLayout(fin_layout)
 
         self.setCentralWidget(widget)
 
-    def field_clicked(self, x, y):
-        pass
+    # @xy_decor_wrap()
+    def field_clicked_wrap(self, x, y):
+        x_in = x
+        y_in = y
+
+        def wrap():
+            self.label1.setText(f"x={x} , y={y}")
+            pass
+
+        return wrap
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, user_name):
         super().__init__()
-        self.setWindowTitle('TicTacToe - Main')
+        self.setWindowTitle(f'Welcome to TicTacToe, {user_name}')
+        self.isplay = False
 
         layoutH = QHBoxLayout()
         buttons = [QPushButton(), QPushButton(), QPushButton()]
@@ -105,19 +121,60 @@ class MainWindow(QMainWindow):
         self.labels[3].setText(f'Draws: {stats[2]}')
 
     def newgame_human(self):
-        self.play_window=PlayWindow()
+        self.play_window = PlayWindow(self, human)
         self.play_window.show()
+        self.isplay = True
 
     def newgame_comp(self):
-        self.play_window=PlayWindow()
+        self.play_window = PlayWindow()
         self.play_window.show()
 
     def press_exit(self):
         self.close()
 
 
+class WelcomeWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle('TicTacToe - Main')
+
+        self.textfield = QLineEdit()
+        self.textfield.setMinimumWidth(70)
+
+        self.textfield.returnPressed.connect(self.enter)
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(QLabel('Welcome to Tic Tac Toe game'))
+        main_layout.addWidget(QLabel('Please enter your name'))
+        name_layout = QHBoxLayout()
+        name_layout.addWidget(QLabel('name:'))
+        name_layout.addWidget(self.textfield)
+        enter_button = QPushButton('Ok')
+        name_layout.addWidget(enter_button)
+        enter_button.clicked.connect(self.enter)
+        name_widget = QWidget()
+        name_widget.setLayout(name_layout)
+        main_layout.addWidget(name_widget)
+
+        widget = QWidget()
+        widget.setLayout(main_layout)
+        self.setCentralWidget(widget)
+
+    def enter(self):
+        if len(self.textfield.text()) > 0:
+            global name
+            name=self.textfield.text()
+            self.main_window = MainWindow(name)
+            self.main_window.show()
+            self.close()
+
+
 app = QApplication(sys.argv)
 # app=QApplication([])
-main_window = MainWindow()
-main_window.show()
+welcome_window = WelcomeWindow()
+welcome_window.show()
+# main_window = MainWindow()
+# main_window.show()
+# play_window=PlayWindow()
+# play_window.show()
 app.exec()
