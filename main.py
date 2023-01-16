@@ -22,11 +22,12 @@ from board import Board
 
 class PlayWindow(QDialog):
 
-    def __init__(self, main_win_ref, pl):
+    def __init__(self, main_win_ref, pl, computer_random_start):
         super().__init__()
         self.setWindowTitle('TicTacToe - Play')
         self.main_win_ref = main_win_ref
         self.board = Board()
+        self.computer_random_start = computer_random_start
 
         self.humanmove = abs(pl - 2)
         self.iswin = False
@@ -71,7 +72,6 @@ class PlayWindow(QDialog):
         if not self.humanmove:
             self.computer_move()
 
-
     def show_board(self):
         for x in range(3):
             for y in range(3):
@@ -113,9 +113,18 @@ class PlayWindow(QDialog):
         self.close()
 
     def computer_move(self):
-        comp_vars = self.board.computer_move(self.comp_pl, silent=True)
+        if self.computer_random_start:
+            comp_vars = []
+            for xx in range(3):
+                for yy in range(3):
+                    if not self.board[xx][yy]:
+                        comp_vars.append((xx, yy))
+            self.computer_random_start = False
+        else:
+            comp_vars = self.board.computer_move(self.comp_pl, silent=True)
 
         xx, yy = random.choice(comp_vars)
+
         self.board[xx][yy] = self.comp_pl
 
         if not self.gameover_check():
@@ -131,9 +140,9 @@ class PlayWindow(QDialog):
                         self.humanmove = False
                         self.computer_move()
                     else:
-                         self.show_board()
+                        self.show_board()
                 else:
-                     return
+                    return
 
         return wrap
 
@@ -150,7 +159,7 @@ class MainWindow(QMainWindow):
         for button in self.buttons:
             layoutH.addWidget(button)
 
-        self.buttons[0].setText("Human first")
+        self.buttons[0].setText(f"{name} first")
         self.buttons[0].clicked.connect(self.newgame_human)
         self.buttons[1].setText("Computer first")
         self.buttons[1].clicked.connect(self.newgame_comp)
@@ -170,7 +179,10 @@ class MainWindow(QMainWindow):
         self.labels[4].setMinimumHeight(15)
         self.show_score()
 
-        widgets = [*self.labels, button_widget]
+        self.randomonchek = QCheckBox("First computer move is random")
+        self.randomonchek.setCheckState(Qt.CheckState.Checked)
+
+        widgets = [*self.labels, button_widget, self.randomonchek]
 
         for item in widgets:
             layoutV.addWidget(item)
@@ -189,7 +201,8 @@ class MainWindow(QMainWindow):
     def newgame(self, pl):
         global game_count
         game_count += 1
-        self.play_window = PlayWindow(self, pl)
+        computer_first_move_random = self.randomonchek.checkState() == Qt.CheckState.Checked
+        self.play_window = PlayWindow(self, pl, computer_first_move_random)
         self.isplay = True
 
         self.play_window.setModal(True)
@@ -251,4 +264,3 @@ welcome_window.show()
 # play_window.show()
 
 app.exec()
-
