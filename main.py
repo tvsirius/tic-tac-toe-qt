@@ -1,5 +1,4 @@
 import sys
-import PyQt6.QtCore
 
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import (QApplication,
@@ -51,7 +50,7 @@ class PlayWindow(QDialog):
 
         widgets = []
         self.label0 = QLabel(f"Game Tic Tac Toe, {game_count} play")
-        self.label1 = QLabel(f"---")
+        self.label1 = QLabel(f"")
         self.fin_layout.addWidget(self.label0)
 
         for i in range(3):
@@ -103,6 +102,7 @@ class PlayWindow(QDialog):
         self.main_win_ref.show_score()
         closebutton = QPushButton('Exit')
         self.fin_layout.addWidget(QLabel(text))
+        self.fin_layout.addWidget(QLabel(""))
         self.fin_layout.addWidget(closebutton)
         closebutton.clicked.connect(self.close_win)
         for x in range(3):
@@ -125,8 +125,7 @@ class PlayWindow(QDialog):
     def field_clicked_wrap(self, x, y):
         def wrap():
             if self.humanmove:
-                # DISABLE THIS
-                self.label1.setText(f"x={x} , y={y}")
+                # self.label1.setText(f"x={x} , y={y}")
                 if self.board.try_move(y, x, self.human_pl):
                     if not self.gameover_check():
                         self.humanmove = False
@@ -242,12 +241,13 @@ class WelcomeWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
-# app=QApplication([])
+
 welcome_window = WelcomeWindow()
 welcome_window.show()
 # main_window = MainWindow(name)
 # main_window.show()
-#
 # play_window=PlayWindow(main_window,1)
 # play_window.show()
+
 app.exec()
+
