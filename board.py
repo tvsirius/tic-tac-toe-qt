@@ -52,6 +52,13 @@ class Board:
         else:
             return False
 
+    def try_move(self, x, y, pl):
+        if not self.field[x][y]:
+            self.field[x][y] = pl
+            return True
+        else:
+            return False
+
     def inputmove(self, pl):
         try:
             s = input(f'Player {pl} ( {self.player_chars[pl]} ), make your move (X Y): ')

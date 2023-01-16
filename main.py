@@ -42,7 +42,7 @@ class PlayWindow(QDialog):
                         [QPushButton(), QPushButton(), QPushButton()],
                         [QPushButton(), QPushButton(), QPushButton()]]
 
-        fin_layout = QVBoxLayout()
+        self.fin_layout = QVBoxLayout()
 
         for x in range(3):
             for y in range(3):
@@ -52,56 +52,89 @@ class PlayWindow(QDialog):
         widgets = []
         self.label0 = QLabel(f"Game Tic Tac Toe, {game_count} play")
         self.label1 = QLabel(f"---")
-        fin_layout.addWidget(self.label0)
+        self.fin_layout.addWidget(self.label0)
 
         for i in range(3):
             widgets.append(QWidget())
             widgets[i].setLayout(layouts[i])
-            fin_layout.addWidget(widgets[i])
+            self.fin_layout.addWidget(widgets[i])
 
-        fin_layout.addWidget(self.label1)
+        self.fin_layout.addWidget(self.label1)
 
         for x in range(3):
             for y in range(3):
                 self.buttons[x][y].clicked.connect(self.field_clicked_wrap(y, x))
 
-        self.setLayout(fin_layout)
+        self.setLayout(self.fin_layout)
+
+        self.show_board()
 
         if not self.humanmove:
             self.computer_move()
 
+
     def show_board(self):
-        pass
+        for x in range(3):
+            for y in range(3):
+                self.buttons[x][y].setText(self.board.player_chars[self.board[x][y]])
+                if (x, y) in self.board.win_cells:
+                    font = self.buttons[x][y].font()
+                    font.setBold(True)
+                    font.setPointSize(20)
+                    self.buttons[x][y].setFont(font)
 
     def gameover_check(self):
         self.iswin = self.board.checkwin_all_players(2)
         self.isdrawn = self.board.full()
-
         if self.iswin or self.isdrawn:
             self.finish()
+            return True
 
     def finish(self):
-        pass
+        if self.comp_pl in self.board.win_players:
+            text = 'Computer wins! Good luck next time!'
+            stats[1] += 1
+        elif self.human_pl in self.board.win_players:
+            text = f'{name} you win! Congratulations!'
+            stats[0] += 1
+        else:
+            text = "It's a DRAWN! Good luck next time!"
+            stats[2] += 1
+        self.main_win_ref.show_score()
+        closebutton = QPushButton('Exit')
+        self.fin_layout.addWidget(QLabel(text))
+        self.fin_layout.addWidget(closebutton)
+        closebutton.clicked.connect(self.close_win)
+        for x in range(3):
+            for y in range(3):
+                self.buttons[x][y].clicked.disconnect()
 
+    def close_win(self):
+        self.close()
 
     def computer_move(self):
-        comp_vars = self.board.computer_move(self.comp_pl)
+        comp_vars = self.board.computer_move(self.comp_pl, silent=True)
 
-        x, y = random.choice(comp_vars)
-        self.board[x][y] = self.comp_pl
+        xx, yy = random.choice(comp_vars)
+        self.board[xx][yy] = self.comp_pl
 
-        self.gameover_check()
+        if not self.gameover_check():
+            self.humanmove = True
+        self.show_board()
 
-        self.humanmove=True
-
-
-    # @xy_decor_wrap()
     def field_clicked_wrap(self, x, y):
         def wrap():
             if self.humanmove:
+                # DISABLE THIS
                 self.label1.setText(f"x={x} , y={y}")
-                self.board.try_move(x,y)
-
+                if self.board.try_move(y, x, self.human_pl):
+                    if not self.gameover_check():
+                        self.humanmove = False
+                        self.computer_move()
+                    else:
+                         self.show_board()
+                else:
+                     return
 
         return wrap
 
@@ -133,7 +166,7 @@ class MainWindow(QMainWindow):
         self.labels[0].setText(f"{user_name} welcome to Tic tac toe!")
         self.labels[0].setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.labels[0].setMinimumHeight(15)
-        self.labels[4].setText("New game ?")
+        self.labels[4].setText(f"You played {game_count} games. New game ?")
         self.labels[4].setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.labels[4].setMinimumHeight(15)
         self.show_score()
@@ -154,6 +187,8 @@ class MainWindow(QMainWindow):
         self.labels[3].setText(f'Draws: {stats[2]}')
 
     def newgame(self, pl):
+        global game_count
+        game_count += 1
         self.play_window = PlayWindow(self, pl)
         self.isplay = True
 
@@ -210,8 +245,9 @@ app = QApplication(sys.argv)
 # app=QApplication([])
 welcome_window = WelcomeWindow()
 welcome_window.show()
-# main_window = MainWindow()
+# main_window = MainWindow(name)
 # main_window.show()
-# play_window=PlayWindow()
+#
+# play_window=PlayWindow(main_window,1)
 # play_window.show()
 app.exec()
